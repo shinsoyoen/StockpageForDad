@@ -108,6 +108,7 @@
         <button class="btn btn-outline-secondary control-btn">🔽 아래</button>
         <button class="btn btn-outline-secondary control-btn">⏫ 맨 위</button>
         <button class="btn btn-outline-secondary control-btn">⏬ 맨 아래</button>
+        <button class="btn btn-outline-secondary control-btn">❌선택 삭제</button>
       </div>
       <!-- 오른쪽 정렬 영역 -->
       <div class="d-flex align-items-center gap-2 ms-auto">
@@ -154,8 +155,8 @@
           <td>{{ row.price|intcomma }}</td>
           <td>{{ row.quantity|intcomma }}</td>
           <td>{{ row.memo }}</td>
-          <td><button class="btn btn-warning btn-sm">수정</button></td>
-          <td><button class="btn btn-danger btn-sm" onclick="confirmDeleteSelected()">선택 삭제</button></td>
+          <td><button class="btn btn-warning btn-sm update-btn">수정</button></td>
+          <td><button class="btn btn-danger btn-sm delete-btn" data-id="{{ row.trade_id }}">삭제</button></td>
         </tr>
         {% empty %}
         <tr>
@@ -216,8 +217,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- 2. 사용자 정의 스크립트 -->
-
-
   <script>
     // 체크박스 갯수 count 스크립트
     function updateSelectedCount() {
@@ -250,64 +249,66 @@
       updateSelectedCount();
     });
 
-    //체크박스+삭제버튼 = 삭제
-    function confirmDeleteSelected() {
-      const checkedBoxes = document.querySelectorAll(".delete-checkbox:checked");
+    document.addEventListener("DOMContentLoaded", function () {
+      const applyInitialFormat = (input) => {
+        let value = input.value.replace(/[^0-9]/g, "");
+        const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        input.value = formatted;
+      };
 
-      if (checkedBoxes.length === 0) {
-        alert("삭제할 항목을 선택해주세요.");
-        return;
+      const formatWithComma = (input) => {
+        input.addEventListener("keydown", function (e) {
+          const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+          if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+            e.preventDefault();
+          }
+        });
+
+        input.addEventListener("input", function (e) {
+          let value = e.target.value.replace(/[^0-9]/g, "");
+          const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          e.target.value = formatted;
+          e.target.setSelectionRange(formatted.length, formatted.length);
+        });
+      };
+
+      const priceInput = document.getElementById("price");
+      const quantityInput = document.getElementById("quantity");
+
+      if (priceInput) {
+        formatWithComma(priceInput);
+        applyInitialFormat(priceInput);
+      }
+      if (quantityInput) {
+        formatWithComma(quantityInput);
+        applyInitialFormat(quantityInput);
       }
 
-      const confirmDelete = confirm("선택한 항목을 삭제하시겠습니까?");
-      if (!confirmDelete) return;
+      //row에서 삭제 버튼 선택 -> 웹에서만 삭제
+      const tradeId = this.dataset.id;
 
-      checkedBoxes.forEach(function (checkbox) {
-        const rowId = checkbox.value;
-        const rowElement = document.getElementById("row_" + rowId);
-        if (rowElement) {
-          rowElement.remove();
-        }
+      if (confirm('정말 삭제하시겠습니까?')) {
+        fetch(`/delete/${tradeId}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+          },
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              this.closest('tr').remove();
+            }
+          });
+      }
+
+      //웹 화면 상단에 미니 팝업 알림처럼 띄우는 방식
+      const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+      toastElList.forEach(function (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
       });
-
-      alert("선택한 항목이 삭제되었습니다.");
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-    const applyInitialFormat = (input) => {
-      let value = input.value.replace(/[^0-9]/g, "");
-      const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      input.value = formatted;
-    };
-
-    const formatWithComma = (input) => {
-      input.addEventListener("keydown", function (e) {
-        const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
-        if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-          e.preventDefault();
-        }
-      });
-
-      input.addEventListener("input", function (e) {
-        let value = e.target.value.replace(/[^0-9]/g, "");
-        const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        e.target.value = formatted;
-        e.target.setSelectionRange(formatted.length, formatted.length);
-      });
-    };
-
-    const priceInput = document.getElementById("price");
-    const quantityInput = document.getElementById("quantity");
-
-    if (priceInput) {
-      formatWithComma(priceInput);
-      applyInitialFormat(priceInput); // 💥 value="1000" -> "1,000"
-    }
-    if (quantityInput) {
-      formatWithComma(quantityInput);
-      applyInitialFormat(quantityInput);
-    }
-  });
+    });
 
 
     //폼 제출시 유효성 검사
@@ -346,15 +347,6 @@
         form.submit();
       }
     }
-
-    //웹 화면 상단에 미니 팝업 알림처럼 띄우는 방식
-    document.addEventListener('DOMContentLoaded', function () {
-      const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-      toastElList.forEach(function (toastEl) {
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
-      });
-    });
 
   </script>
 

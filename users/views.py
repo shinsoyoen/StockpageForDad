@@ -3,9 +3,10 @@ from .models import TransactionHistory
 from django.shortcuts import render, redirect
 from datetime import datetime
 from django.contrib import messages
+from django.http import JsonResponse
 import logging
 
-logger = logging.getLogger(__name__)  # 로거 설정 (콘솔 출력용)
+logger = logging.getLogger(__name__)
 
 def index(request):
     today = datetime.now().date()
@@ -34,7 +35,8 @@ def index(request):
         logger.info("🟢 GET 요청 처리 중")
         form = TransactionForm(initial={'trans_date': today})
 
-    data = TransactionHistory.objects.all().order_by('-trans_date')
+    data = TransactionHistory.objects.all().order_by('-trans_date', '-trade_id')  # 최신순 정렬
+
 
     context = {
         'form': form,
@@ -43,3 +45,8 @@ def index(request):
     }
 
     return render(request, 'users/trade_list.html', context)
+
+def delete_transaction(request, trade_id):
+    if request.method == 'POST':
+        TransactionHistory.objects.filter(trade_id=trade_id).delete()
+        return JsonResponse({'success': True})
