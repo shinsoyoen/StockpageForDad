@@ -21,5 +21,6 @@ from users import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),  # 기본 경로에 index 뷰 연결
+    path('api/delete', views.delete_transaction, name='delete_transaction'),
 ]
 

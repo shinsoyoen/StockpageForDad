@@ -8,11 +8,10 @@ class TransactionHistoryAdmin(admin.ModelAdmin):
     search_fields = ('memo',)
     ordering = ('-trans_date',)                                                          
     readonly_fields = ('trade_id',)
+    readonly_fields = ['amount']
 
     fieldsets = (
         (None, {
             'fields': ('category', 'trans_date', 'quantity', 'price', 'memo')
         }),
     )
-
-

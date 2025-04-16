@@ -5,4 +5,5 @@ from django import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('', include('transaction_History.urls')),
 ]

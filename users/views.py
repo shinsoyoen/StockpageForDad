@@ -16,27 +16,46 @@ def index(request):
         logger.info("📩 POST 요청 감지됨")
         logger.info(f"📄 받은 데이터: {request.POST}")
 
-        form = TransactionForm(request.POST)
+        mode = request.POST.get('mode')
+        trade_id = request.POST.get('trade_id')
 
-        if form.is_valid():
-            logger.info("✅ 폼 유효성 검사 통과")
-            transaction = form.save(commit=False)
-            transaction.date = today
-            transaction.save()
+        if mode == 'update':
+            logger.info(f"🔄 업데이트 모드 감지됨 - trade_id: {trade_id}")
+            try:
+                transaction = TransactionHistory.objects.get(trade_id=trade_id)
+                transaction.category = request.POST.get('category')
+                transaction.price = request.POST.get('price')
+                transaction.quantity = request.POST.get('quantity')
+                transaction.memo = request.POST.get('memo')
+                transaction.date = today  # ✅ 날짜 갱신
+                transaction.save()
+                messages.success(request, '✅ 거래 정보가 성공적으로 수정되었습니다!')
+                logger.info(f"🎉 trade_id {trade_id} 업데이트 완료")
+                return redirect('index')
+            except TransactionHistory.DoesNotExist:
+                messages.error(request, '⚠️ 수정하려는 거래 정보를 찾을 수 없습니다.')
+                logger.warning(f"⚠️ trade_id {trade_id}에 해당하는 거래 정보 없음")
 
-            messages.success(request, '✅ 등록이 성공적으로 완료되었습니다!')
-            logger.info("🎉 DB 저장 완료")
-            return redirect('index')
         else:
-            logger.warning("⚠️ 폼 유효성 검사 실패")
-            logger.warning(f"📌 오류 내용: {form.errors}")
-            messages.error(request, '⚠️ 모든 항목을 작성해주세요.')
+            logger.info("➕ 등록 모드 감지됨")
+            form = TransactionForm(request.POST)
+            if form.is_valid():
+                logger.info("✅ 폼 유효성 검사 통과")
+                transaction = form.save(commit=False)
+                transaction.date = today
+                transaction.save()
+                messages.success(request, '✅ 등록이 성공적으로 완료되었습니다!')
+                logger.info("🎉 DB 저장 완료")
+                return redirect('index')
+            else:
+                logger.warning("⚠️ 폼 유효성 검사 실패")
+                logger.warning(f"📌 오류 내용: {form.errors}")
+                messages.error(request, '⚠️ 모든 항목을 작성해주세요.')
     else:
         logger.info("🟢 GET 요청 처리 중")
         form = TransactionForm(initial={'trans_date': today})
 
-    data = TransactionHistory.objects.all().order_by('-trans_date', '-trade_id')  # 최신순 정렬
-
+    data = TransactionHistory.objects.all().order_by('-trans_date', '-trade_id')
 
     context = {
         'form': form,
@@ -45,6 +64,7 @@ def index(request):
     }
 
     return render(request, 'users/trade_list.html', context)
+
 
 def delete_transaction(request, trade_id):
     if request.method == 'POST':

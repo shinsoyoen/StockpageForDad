@@ -55,8 +55,9 @@
       color: #000;
     }
 
-    .selected-row {
-      background-color: yellow;
+    .highlight-row td {
+      background-color: #f0f8ff;
+      /* 연한 하늘색 */
     }
   </style>
 </head>
@@ -159,9 +160,14 @@
           <td>{{ row.trans_date|date:"Y-m-d" }}</td>
           <td>{{ row.price|intcomma }}</td>
           <td>{{ row.quantity|intcomma }}</td>
-          <td>{{ row.price|intcomma }}</td>
+          <td>{{ row.amount|intcomma }}</td>
           <td>{{ row.memo }}</td>
-          <td><button class="btn btn-warning btn-sm update-btn">수정</button></td>
+          <td>
+            <button class="btn btn-warning btn-sm update-btn" data-id="{{ row.trade_id }}"
+              data-category="{{ row.category }}" data-price="{{ row.price }}" data-quantity="{{ row.quantity }}"
+              data-memo="{{ row.memo }}">수정
+            </button>
+          </td>
           <td><button class="btn btn-danger btn-sm delete-btn" data-id="{{ row.trade_id }}">삭제</button></td>
         </tr>
         {% empty %}
@@ -180,6 +186,8 @@
       <div class="modal-content">
         <form method="POST" action="{% url 'index' %}" id="tradeForm">
           {% csrf_token %}
+          <input type="hidden" name="mode" id="form-mode" value="create">
+          <input type="hidden" name="trade_id" id="form-trade-id">
           <div class="modal-header">
             <h5 class="modal-title" id="tradeModalLabel">➕ 📋 거래정보 등록</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
@@ -195,7 +203,7 @@
                 readonly>
             </div>
             <div class="mb-3">
-              <label class="form-label">거래가</label>
+              <label class="form-label">매매가</label>
               {{ form.price }}
             </div>
             <div class="mb-3">
@@ -224,21 +232,6 @@
 
   <!-- 2. 사용자 정의 스크립트 -->
   <script>
-    // ✅ 체크박스 갯수 count + 전체 선택 동기화 + 행 배경색 처리
-    function updateSelectedCount() {
-      const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
-      const count = [...checkboxes].filter(cb => cb.checked).length;
-      document.getElementById('selected-count').innerText = `✔️ ${count}개 선택 중`;
-
-      const checkAll = document.getElementById('checkAll');
-      checkAll.checked = checkboxes.length > 0 && count === checkboxes.length;
-
-      // ✅ 선택된 행에 배경색 적용
-      checkboxes.forEach(cb => {
-        const row = cb.closest('tr');
-        row.style.backgroundColor = cb.checked ? "#f0f8ff" : "";
-      });
-    }
 
     //------------/////// 이벤트 리스너 //////--------//
     document.addEventListener("DOMContentLoaded", function () {
@@ -254,6 +247,46 @@
       const priceInput = document.getElementById("price");
       const quantityInput = document.getElementById("quantity");
 
+      // ✅ 수정 버튼 활성화 
+      document.querySelectorAll('.update-btn').forEach(button => {
+        button.addEventListener('click', function () {
+
+          // ✅ dataset에서 데이터 가져오기
+          const tradeId = this.dataset.id;
+          const category = this.dataset.category;
+          const price = this.dataset.price;
+          const quantity = this.dataset.quantity;
+          const memo = this.dataset.memo;
+
+          // ✅ 모달 내부 요소에 값 채워넣기
+          const formMode = document.getElementById('form-mode');
+          if (formMode) formMode.value = 'update';
+
+          const tradeIdField = document.getElementById('form-trade-id');
+          if (tradeIdField) tradeIdField.value = tradeId;
+
+          const categoryField = document.querySelector('select[name="category"]');
+          if (categoryField) categoryField.value = category;
+
+          const priceField = document.querySelector('input[name="price"]');
+          if (priceField) priceField.value = price;
+
+          const quantityField = document.querySelector('input[name="quantity"]');
+          if (quantityField) quantityField.value = quantity;
+
+          const memoField = document.querySelector('input[name="memo"]');
+          if (memoField) memoField.value = memo;
+
+          const modalLabel = document.getElementById('tradeModalLabel');
+          if (modalLabel) modalLabel.textContent = "✏️ 거래정보 수정";
+
+          const modalElement = document.getElementById('tradeModal');
+          if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          }
+        });
+      });
 
       // ✅ 개별 체크박스 변경 시 이벤트 등록
       checkboxes.forEach(cb => {
@@ -377,12 +410,35 @@
           tableBody.appendChild(row);
         }
       });
+
     });
 
 
-    // ------이하, addEventListener 외부----------
+    // ------ addEventListener 외부----------
+
+    // ✅ 체크박스 갯수 count + 전체 선택 동기화 + 행 배경색 처리
+    function updateSelectedCount() {
+      const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+      const count = [...checkboxes].filter(cb => cb.checked).length;
+      document.getElementById('selected-count').innerText = `✔️ ${count}개 선택 중`;
+
+      const checkAll = document.getElementById('checkAll');
+      checkAll.checked = checkboxes.length > 0 && count === checkboxes.length;
+
+      // ✅ 선택된 행에 배경색 클래스 토글
+      checkboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        if (cb.checked) {
+          row.classList.add('highlight-row');
+        } else {
+          row.classList.remove('highlight-row');
+        }
+      });
+    }
+
     // ✅ 거래 등록 폼 제출 시 유효성 검사 및 처리
     function submitTradeForm() {
+      document.getElementById('tradeForm').submit();
       const form = document.getElementById("tradeForm");
       if (!form) {
         console.error("❌ tradeForm을 찾을 수 없습니다!");
@@ -481,7 +537,6 @@
       tbody.innerHTML = "";
       originalRows.forEach(row => tbody.appendChild(row));
     }
-
   </script>
 
   {% if messages %}
