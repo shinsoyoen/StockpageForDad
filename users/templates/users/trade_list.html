@@ -112,19 +112,20 @@
       </div>
       <!-- 오른쪽 정렬 영역 -->
       <div class="d-flex align-items-center gap-2 ms-auto">
-        <select class="form-select" style="width: auto;">
-          <option selected>정렬 기준 선택</option>
-          <option value="1">날짜순</option>
-          <option value="2">금액순</option>
-          <option value="3">수량순</option>
 
+        <select class="form-select" style="width: auto;" id="sortKey"  onchange="toggleSortOrder()">
+          <option selected value="">정렬 기준 선택</option>
+          <option value="Date">날짜</option>
+          <option value="price">금액</option>
+          <option value="quantity">수량</option>
         </select>
-        <select class="form-select" style="width: auto;">
-          <option selected>정렬 선택</option>
-          <option value="1">오름차순</option>
-          <option value="2">내림차순</option>
+
+        <select class="form-select" style="width: auto;" id="sortOrder" disabled onchange="onSortOrderChange()">
+          <option value="asc">오름차순</option>
+          <option value="desc">내림차순</option>
         </select>
-        <button class="btn btn-outline-primary">🔄 정렬 새로고침</button>
+
+        <button class="btn btn-outline-primary" id="refreshBtn" onclick="resetSort()"> 🔄 정렬 새로고침</button>
       </div>
     </div>
 
@@ -138,8 +139,9 @@
               <option>매도</option>
             </select></th>
           <th>날짜</th>
-          <th>거래가</th>
+          <th>매매가</th>
           <th>수량</th>
+          <th>금액</th>
           <th class="memo-cell">메모</th>
           <th>✏️ 수정</th>
           <th>🗑️ 삭제</th>
@@ -154,6 +156,7 @@
           <td>{{ row.trans_date|date:"Y-m-d" }}</td>
           <td>{{ row.price|intcomma }}</td>
           <td>{{ row.quantity|intcomma }}</td>
+          <td>{{ row.price|intcomma }}</td>
           <td>{{ row.memo }}</td>
           <td><button class="btn btn-warning btn-sm update-btn">수정</button></td>
           <td><button class="btn btn-danger btn-sm delete-btn" data-id="{{ row.trade_id }}">삭제</button></td>
@@ -229,7 +232,9 @@
       checkAll.checked = checkboxes.length > 0 && count === checkboxes.length;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    /-------------/////// 이벤트 리스너 //////--------
+    document.addEventListener("DOMContentLoaded", function () {
+
       const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
       const checkAll = document.getElementById('checkAll');
 
@@ -237,19 +242,27 @@
       checkboxes.forEach(cb => {
         cb.addEventListener('change', updateSelectedCount);
       });
-
       // 전체 선택 체크박스 클릭 시
       checkAll.addEventListener('change', () => {
         const isChecked = checkAll.checked;
         checkboxes.forEach(cb => cb.checked = isChecked);
         updateSelectedCount();
       });
-
       // 초기 상태 갱신
       updateSelectedCount();
-    });
 
-    document.addEventListener("DOMContentLoaded", function () {
+      // 저장된 정렬 기준 로드
+      const savedKey = localStorage.getItem("sortKey");
+      const savedOrder = localStorage.getItem("sortOrder");
+
+      if (savedKey && savedOrder) {
+        document.getElementById("sortKey").value = savedKey;
+        document.getElementById("sortOrder").value = savedOrder;
+        document.getElementById("sortOrder").disabled = false;
+        sortTable();  // 자동 정렬 실행
+      }
+
+      //// input 숫자외 input 블럭
       const applyInitialFormat = (input) => {
         let value = input.value.replace(/[^0-9]/g, "");
         const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -284,30 +297,23 @@
         applyInitialFormat(quantityInput);
       }
 
-      //row에서 삭제 버튼 선택 -> 웹에서만 삭제
-      const tradeId = this.dataset.id;
-
-      if (confirm('정말 삭제하시겠습니까?')) {
-        fetch(`/delete/${tradeId}/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-          },
-        })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              this.closest('tr').remove();
-            }
-          });
-      }
-
       //웹 화면 상단에 미니 팝업 알림처럼 띄우는 방식
       const toastElList = [].slice.call(document.querySelectorAll('.toast'));
       toastElList.forEach(function (toastEl) {
         const toast = new bootstrap.Toast(toastEl);
         toast.show();
       });
+
+      ////드롭박스로 정렬하기
+      const tbody = document.querySelector("tbody");
+      originalRows = Array.from(tbody.querySelectorAll("tr"));
+
+      if (savedKey && savedOrder) {
+        document.getElementById("sortKey").value = savedKey;
+        document.getElementById("sortOrder").value = savedOrder;
+        document.getElementById("sortOrder").disabled = false;
+        sortTable(savedKey, savedOrder);  // 전달된 값 사용
+      }
     });
 
 
@@ -348,6 +354,77 @@
       }
     }
 
+    // 드롭박스 기능 (1번 드롭박스 선택 시 2번 활성화/비활성화)
+    function toggleSortOrder() {
+      const sortKey = document.getElementById("sortKey").value;
+      const sortOrder = document.getElementById("sortOrder");
+
+      if (sortKey === "") {
+        sortOrder.disabled = true;
+        localStorage.removeItem("sortKey");
+        localStorage.removeItem("sortOrder");
+      } else {
+        sortOrder.disabled = false;
+        localStorage.setItem("sortKey", sortKey);
+        sortTable(sortKey, document.getElementById("sortOrder").value);
+      }
+    }
+
+    // 드롭박스 기능 (2번 드롭박스 선택 시 정렬)
+    function onSortOrderChange() {
+      const sortKey = document.getElementById("sortKey").value;
+      const sortOrder = document.getElementById("sortOrder").value;
+
+      if (sortKey !== "") {
+        localStorage.setItem("sortOrder", sortOrder);
+        sortTable(sortKey, sortOrder);
+      }
+    }
+
+    // 테이블 정렬 함수
+    function sortTable(sortKey, sortOrder) {
+      const tbody = document.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+
+      const columnIndexMap = {
+        "Date": 2,
+        "price": 3,
+        "quantity": 4,
+      };
+      const colIndex = columnIndexMap[sortKey];
+
+      rows.sort((a, b) => {
+        let aVal = a.children[colIndex].innerText.replace(/,/g, '');
+        let bVal = b.children[colIndex].innerText.replace(/,/g, '');
+
+        if (sortKey === "Date") {
+          aVal = new Date(aVal);
+          bVal = new Date(bVal);
+        } else {
+          aVal = parseFloat(aVal);
+          bVal = parseFloat(bVal);
+        }
+
+        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // 정렬 초기화 버튼
+    function resetSort() {
+      localStorage.removeItem("sortKey");
+      localStorage.removeItem("sortOrder");
+
+      document.getElementById("sortKey").value = "";
+      const orderSelect = document.getElementById("sortOrder");
+      orderSelect.value = "asc";
+      orderSelect.disabled = true;
+
+      const tbody = document.querySelector("tbody");
+      tbody.innerHTML = "";
+      originalRows.forEach(row => tbody.appendChild(row));
+    }
   </script>
 
   {% if messages %}
@@ -369,6 +446,7 @@
     {% endfor %}
   </div>
   {% endif %}
+
 </body>
 
 </html>

@@ -9,6 +9,10 @@ class TransactionHistory(models.Model):
     price = models.IntegerField()
     memo = models.TextField(blank=True, null=True)
 
+    @property
+    def total_price(self):
+        return self.price * self.quantity
+
     class Meta:
         db_table = 'transaction_History'
         managed = False
@@ -38,8 +42,4 @@ class Trade(models.Model):
 
     def __str__(self):
         return f'{self.type} - {self.trans_date}'
-
-
-
     
-
