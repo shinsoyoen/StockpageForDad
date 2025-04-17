@@ -155,7 +155,7 @@
         {% for row in data %}
         {% load humanize %}
         <tr>
-          <td><input type="checkbox" class="row-checkbox"></td>
+          <td><input type="checkbox" class="row-checkbox" name="rowCheck"></td>
           <td>{{ row.category }}</td>
           <td>{{ row.trans_date|date:"Y-m-d" }}</td>
           <td>{{ row.price|intcomma }}</td>
@@ -411,6 +411,36 @@
         }
       });
 
+      // ✅ 삭제 버튼 누름 -> AJAX로 삭제
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const tradeId = this.dataset.id;
+
+          if (confirm("정말 이 거래를 삭제하시겠습니까?")) {
+            fetch(`/delete/${tradeId}/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+              },
+            })
+              .then(response => {
+                if (response.ok) {
+                  // ✅ 삭제 성공 시: 해당 행을 화면에서 제거
+                  this.closest('tr').remove();
+                  alert("✅ 삭제 완료!");
+                } else {
+                  alert("❌ 삭제 실패");
+                }
+              })
+              .catch(error => {
+                console.error("🚨 삭제 중 오류:", error);
+                alert("⚠️ 오류가 발생했습니다.");
+              });
+          }
+        });
+      });
+
     });
 
 
@@ -537,6 +567,13 @@
       tbody.innerHTML = "";
       originalRows.forEach(row => tbody.appendChild(row));
     }
+
+    // ✅ AJAX 삭제 토큰
+    function getCSRFToken() {
+      return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+
   </script>
 
   {% if messages %}

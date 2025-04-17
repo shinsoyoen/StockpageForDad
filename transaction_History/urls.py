@@ -15,12 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.urls import path, include
 from django.urls import path
 from users import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index, name='index'),  # 기본 경로에 index 뷰 연결
-    path('api/delete', views.delete_transaction, name='delete_transaction'),
+    path('', views.index, name='index'),
+    path('delete/<int:trade_id>/', views.delete_trade, name='delete_trade'),
 ]
 

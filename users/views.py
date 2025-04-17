@@ -5,6 +5,8 @@ from datetime import datetime
 from django.contrib import messages
 from django.http import JsonResponse
 import logging
+from django.shortcuts import get_object_or_404
+from .models import Trade  # Trade 모델만 필요하다면 이거!
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,15 @@ def delete_transaction(request, trade_id):
     if request.method == 'POST':
         TransactionHistory.objects.filter(trade_id=trade_id).delete()
         return JsonResponse({'success': True})
+
+def delete_trade(request, trade_id):
+    if request.method == 'POST':
+        trade = get_object_or_404(TransactionHistory, pk=trade_id)
+        trade.delete()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+class Meta:
+    db_table = 'transaction_History'
+    managed = False  # ✅ 외부 테이블 직접 사용 시 필수!
+
