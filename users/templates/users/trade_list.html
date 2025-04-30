@@ -91,7 +91,7 @@
       </button>
     </div>
 
-    <!-- 테이블 탭 -->
+    <!-- 테이블 탭
     <ul class="nav nav-tabs custom-tabs mb-3">
       <li class="nav-item">
         <a class="nav-link active" href="#">1번 테이블</a>
@@ -102,7 +102,8 @@
       <li class="nav-item">
         <a class="nav-link" href="#">3번 테이블</a>
       </li>
-    </ul>
+    </ul> -->
+    <br>
 
     <!-- 컨트롤 버튼 및 정렬 드롭다운 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -138,9 +139,10 @@
       <thead class="table-light">
         <tr>
           <th><input type="checkbox" id="checkAll"></th>
-          <th>구분<br><select class="form-select form-select-sm">
-              <option>매매</option>
-              <option>매도</option>
+          <th>구분<br><select id="categoryFilter" class="form-select form-select-sm">
+              <option value="">전체</option>
+              <option value="매매">매매</option>
+              <option value="매도">매도</option>
             </select></th>
           <th>날짜</th>
           <th>매매가</th>
@@ -246,6 +248,29 @@
       const tableBody = document.querySelector('tbody');
       const priceInput = document.getElementById("price");
       const quantityInput = document.getElementById("quantity");
+      const deleteChois = document.getElementById("deleteChois");
+      const categoryFilter = document.getElementById("categoryFilter");
+
+      // ✅ 드롭다운 필터링
+      if (categoryFilter) {
+        categoryFilter.addEventListener("change", function () {
+          const selected = this.value;
+          const rows = document.querySelectorAll("tbody tr");
+
+          rows.forEach(row => {
+            const categoryCell = row.children[1]; // 두 번째 <td> (구분)
+            if (!categoryCell) return;
+
+            const cellText = categoryCell.textContent.trim();
+
+            if (!selected || cellText === selected) {
+              row.style.display = "";
+            } else {
+              row.style.display = "none";
+            }
+          });
+        });
+      }
 
       // ✅ 수정 버튼 활성화 
       document.querySelectorAll('.update-btn').forEach(button => {
@@ -439,8 +464,47 @@
               });
           }
         });
+
       });
 
+      // ✅ row 선택-> 삭제 버튼 누르면 정보 삭제
+      deleteChois.addEventListener('click', () => {
+        const checkedRows = Array.from(document.querySelectorAll('tbody input[type="checkbox"]:checked'));
+
+        if (checkedRows.length === 0) {
+          alert("❗ 삭제할 항목을 선택해주세요.");
+          return;
+        }
+
+        if (!confirm("선택한 거래를 모두 삭제하시겠습니까?")) return;
+
+        checkedRows.forEach(cb => {
+          const row = cb.closest('tr');
+          const deleteBtn = row.querySelector('.delete-btn');
+          const tradeId = deleteBtn.dataset.id;
+
+          fetch(`/delete/${tradeId}/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCSRFToken()
+            },
+          })
+            .then(response => {
+              if (response.ok) {
+                row.remove();
+              } else {
+                alert(`❌ 삭제 실패: 거래 ID ${tradeId}`);
+              }
+            })
+            .catch(error => {
+              console.error("🚨 삭제 중 오류:", error);
+              alert("⚠️ 오류가 발생했습니다.");
+            });
+        });
+        updateSelectedCount(); // 선택 개수 갱신
+      });
+      //
     });
 
 
@@ -572,8 +636,6 @@
     function getCSRFToken() {
       return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
-
-
   </script>
 
   {% if messages %}

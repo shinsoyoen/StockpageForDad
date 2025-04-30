@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from users import views  # ✅ 내가 만든 views.py 참조
-
+from users import views 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
