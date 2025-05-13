@@ -38,7 +38,7 @@ class TransactionHistory(models.Model):
 
     class Meta:
         db_table = 'transaction_History'
-        managed = False
+        #managed = False
 
     def __str__(self):
         return f"[{self.trade_id}] {self.category} - {self.trans_date}"

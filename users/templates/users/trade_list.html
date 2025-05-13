@@ -121,7 +121,7 @@
         <select class="form-select" style="width: auto;" id="sortKey" onchange="toggleSortOrder()">
           <option selected value="">정렬 기준 선택</option>
           <option value="Date">날짜</option>
-          <option value="price">금액</option>
+          <option value="amount">금액</option>
           <option value="quantity">수량</option>
         </select>
 
@@ -593,10 +593,12 @@
       const rows = Array.from(tbody.querySelectorAll("tr"));
 
       const columnIndexMap = {
-        "Date": 2,
-        "price": 3,
-        "quantity": 4,
+        "Date": 2,       // 날짜
+        "price": 3,      // 매매가
+        "quantity": 4,   // 수량
+        "amount": 5      // 금액
       };
+      
       const colIndex = columnIndexMap[sortKey];
 
       rows.sort((a, b) => {
