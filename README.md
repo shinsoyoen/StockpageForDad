@@ -2,12 +2,16 @@
 (가족의 요청..)
 
 📅 개발 기간
+
 2025.04 ~ 2025.05 (약 1개월)
 
 🛠 사용 기술 & 환경
+
 Language: Python
+
 Framework: Django
-Database: ...
+
+Database: sqlite3
 
 🖥 메인 화면
 <img width="1260" height="642" alt="image" src="https://github.com/user-attachments/assets/ce335a43-db2b-451d-b731-6d09cde8bdcd" />
