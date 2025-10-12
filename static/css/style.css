@@ -53,3 +53,7 @@ td {
 .highlight-row td {
     background-color: #f0f8ff;
 }
+
+.navbar-nav {
+  align-items: center;
+}

@@ -1,11 +1,12 @@
-### Django를 활용한 개인 페이지 만들기 ###
+## Django를 활용한 개인 페이지 만들기 ##
 
 📅 개발 기간
 
 2025.04 ~ 2025.05 (약 1개월)
+
 2025.10 ~ 진행 중
 
-# 진행 상황 기록
+### 진행 상황 기록 ###
 
 https://velog.io/@shinsos0217/series/Djangoproject
 
@@ -27,5 +28,5 @@ Database: sqlite3
 - 행 CRUD
 - 추후 추가 : 시각화, 딥러닝, LLM
 
-# 🚀 서버 실행
+### 🚀 서버 실행 ###
 python manage.py runserver
