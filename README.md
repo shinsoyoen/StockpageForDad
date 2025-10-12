@@ -30,8 +30,4 @@ Database: sqlite3
 - 추후 추가 : 시각화, 딥러닝, LLM
 
 ### 🚀 서버 실행 ###
-<<<<<<< HEAD
 python manage.py runserver
-=======
-python manage.py runserver
->>>>>>> e5f8489badb4f49504a603079198a81a0936d4ff
