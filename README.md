@@ -21,6 +21,7 @@ Framework: Django
 Database: sqlite3
 
 🖥 메인 화면
+
 <img src="https://github.com/user-attachments/assets/d43dedb9-2cbc-463f-9c45-938eca390f10" width="800" alt="캡처" />
 
 ✨ 주요 기능
