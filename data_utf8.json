@@ -1,0 +1,50 @@
+[
+{
+  "model": "users.transactionhistory",
+  "pk": 2,
+  "fields": {
+    "category": "매매",
+    "trans_date": "2025-04-30T09:38:28",
+    "quantity": 10,
+    "price": 7894,
+    "amount": 78940,
+    "memo": "매매 정보 입력"
+  }
+},
+{
+  "model": "users.transactionhistory",
+  "pk": 4,
+  "fields": {
+    "category": "매도",
+    "trans_date": "2025-04-30T17:06:19",
+    "quantity": 2432,
+    "price": 7894,
+    "amount": 19198208,
+    "memo": "test1"
+  }
+},
+{
+  "model": "users.transactionhistory",
+  "pk": 5,
+  "fields": {
+    "category": "매매",
+    "trans_date": "2025-04-30T17:33:49",
+    "quantity": 789012,
+    "price": 123456,
+    "amount": 97408265472,
+    "memo": "데이터 입력11"
+  }
+},
+{
+  "model": "users.transactionhistory",
+  "pk": 6,
+  "fields": {
+    "category": "매매",
+    "trans_date": "2025-05-01T09:23:21",
+    "quantity": 12324,
+    "price": 12345,
+    "amount": 152139780,
+    "memo": ""
+  }
+}
+]

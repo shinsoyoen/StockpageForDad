@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <title>상세 정보</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+  {% include "base_nav.html" %}
+  <div class="container table-wrapper mt-5">
+    <!-- 상단 제목과 등록 버튼 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="fw-bold">📋 상세 정보</h3>
+      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#tradeModal">
+        ➕ 📋거래정보 등록
+      </button>
+    </div>
+
+    <!-- 컨트롤 버튼 및 정렬 드롭다운 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- 왼쪽: 선택 개수 + 이동 버튼 -->
+      <div>
+        <span id="selected-count" class="me-3 fw-bold text-primary">✔️ 0개 선택 중</span>
+        <button class="btn btn-outline-secondary control-btn" id="moveUpTop">⏫ 맨 위</button>
+        <button class="btn btn-outline-secondary control-btn" id="moveUp">🔼 위</button>
+        <button class="btn btn-outline-secondary control-btn" id="moveDown">🔽 아래</button>
+        <button class="btn btn-outline-secondary control-btn" id="moveDownBottom">⏬ 맨 아래</button>
+        <button class="btn btn-outline-secondary control-btn" id="deleteChois">❌선택 삭제</button>
+      </div>
+      <!-- 오른쪽 정렬 영역 -->
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <select class="form-select" style="width: auto;" id="sortKey" onchange="toggleSortOrder()">
+          <option selected value="">정렬 기준 선택</option>
+          <option value="Date">날짜</option>
+          <option value="amount">금액</option>
+          <option value="quantity">수량</option>
+        </select>
+
+        <select class="form-select" style="width: auto;" id="sortOrder" disabled onchange="onSortOrderChange()">
+          <option value="asc">오름차순</option>
+          <option value="desc">내림차순</option>
+        </select>
+
+        <button class="btn btn-outline-primary" id="refreshBtn" onclick="resetSort()"> 🔄 정렬 새로고침</button>
+      </div>
+    </div>
+
+    <!-- 표 시작 -->
+    <table class="table table-bordered text-center">
+      <thead class="table-light">
+        <tr>
+          <th><input type="checkbox" id="checkAll"></th>
+          <th>구분<br><select id="categoryFilter" class="form-select form-select-sm">
+              <option value="">전체</option>
+              <option value="매매">매매</option>
+              <option value="매도">매도</option>
+            </select></th>
+          <th>날짜</th>
+          <th>매매가</th>
+          <th>수량</th>
+          <th>금액</th>
+          <th class="memo-cell">메모</th>
+          <th>✏️ 수정</th>
+          <th>🗑️ 삭제</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        {% load humanize %}
+        <tr>
+          <td><input type="checkbox" class="row-checkbox" name="rowCheck"></td>
+          <td>{{ row.category }}</td>
+          <td>{{ row.trans_date|date:"Y-m-d" }}</td>
+          <td>{{ row.price|intcomma }}</td>
+          <td>{{ row.quantity|intcomma }}</td>
+          <td>{{ row.amount|intcomma }}</td>
+          <td>{{ row.memo }}</td>
+          <td>
+            <button class="btn btn-warning btn-sm update-btn" data-id="{{ row.trade_id }}"
+              data-category="{{ row.category }}" data-price="{{ row.price }}" data-quantity="{{ row.quantity }}"
+              data-memo="{{ row.memo }}">수정
+            </button>
+          </td>
+          <td><button class="btn btn-danger btn-sm delete-btn" data-id="{{ row.trade_id }}">삭제</button></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7">등록된 거래 내역이 없습니다.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <!-- p class="text-muted fs-6 mt-3">⚙️ 가능하면 여기 UI 눌러서 추가도 가능하게 (ex. 코랩/마우스 히든)/p> -->
+  </div>
+
+  <!-- 매매 정보 추가 모달창 -->
+  <div class="modal fade" id="tradeModal" tabindex="-1" aria-labelledby="tradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form method="POST" action="{% url 'index' %}" id="tradeForm">
+          {% csrf_token %}
+          <input type="hidden" name="mode" id="form-mode" value="create">
+          <input type="hidden" name="trade_id" id="form-trade-id">
+          <div class="modal-header">
+            <h5 class="modal-title" id="tradeModalLabel">➕ 📋 거래정보 등록</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">구분</label>
+              {{ form.category }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">날짜</label>
+              <input type="text" name="trans_date" class="form-control rounded-3" value="{{ today|date:'Y-m-d' }}"
+                readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">매매가</label>
+              {{ form.price }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">수량</label>
+              {{ form.quantity }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">메모</label>
+              {{ form.memo }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary rounded-pill shadow-sm px-4"
+              data-bs-dismiss="modal">닫기 </button>
+            <button type="button" class="btn btn-success rounded-pill shadow-sm px-4" onclick="submitTradeForm()">📝 매매
+              등록 </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  {% if messages %}
+  <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    {% for message in messages %}
+    <div class="toast align-items-center text-white 
+            {% if message.tags == 'success' %}bg-success
+            {% elif message.tags == 'error' %}bg-danger
+            {% else %}bg-secondary{% endif %}
+            border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="닫기"></button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+  
+<!-- 부트스트랩 스크립트 로딩 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 스크립트 -->
+<script src="{% static 'js/nav.js' %}?v={{ now|date:'U' }}"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+body {
+    background-color: #f8f9fa;
+    font-size: 1.2rem;
+}
+
+.table-wrapper {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+th,
+td {
+    vertical-align: middle
+}
+
+.memo-cell {
+    max-width: 200px;
+    word-break: keep-all;
+}
+
+.control-btn {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}
+
+.table-tab-editable {
+    border: none;
+    background: transparent;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #0d6efd;
+}
+
+.custom-tabs .nav-link {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6c757d;
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-tabs .nav-link.active {
+  color: #0d6efd;
+  border-bottom: 2px solid #0d6efd;
+  background-color: transparent;
+}
+
+.custom-tabs .nav-link:hover {
+  color: #0d6efd;
+}
+
+.highlight-row td {
+    background-color: #f0f8ff;
+}
