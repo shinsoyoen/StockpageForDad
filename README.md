@@ -21,7 +21,8 @@ Framework: Django
 Database: sqlite3
 
 🖥 메인 화면
-<img width="1260" height="640" alt="image" src="https://github.com/user-attachments/assets/ce335a43-db2b-451d-b731-6d09cde8bdcd" />
+
+<img src="https://github.com/user-attachments/assets/d43dedb9-2cbc-463f-9c45-938eca390f10" width="800" alt="캡처" />
 
 ✨ 주요 기능
 - 체크박스+버튼 = 사용자가 원하는 대로 행 이동
@@ -29,4 +30,8 @@ Database: sqlite3
 - 추후 추가 : 시각화, 딥러닝, LLM
 
 ### 🚀 서버 실행 ###
+<<<<<<< HEAD
 python manage.py runserver
+=======
+python manage.py runserver
+>>>>>>> e5f8489badb4f49504a603079198a81a0936d4ff
